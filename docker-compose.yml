@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres
+    container_name: database-arcano
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    ports:
+      - '5433:5432'
+
+  php-apache:
+    container_name: php-apache-arcano
+    build:
+      context: ./php
+    ports:
+        - '8082:80'
+        - '8083:443'
+    volumes:
+      - ./:/var/www/arcano
+      - ./apache/default.conf:/etc/apache2/sites-enabled/000-default.conf
+    depends_on:
+      - database
