@@ -6,8 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateUserRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Http\Requests\UserRecoveryRequest;
+use App\Mail\UserRecovery;
 use App\Models\User;
+use App\Models\UserLogAccess;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Session;
 
 class UserAuthController extends Controller
 {
@@ -23,6 +30,13 @@ class UserAuthController extends Controller
       $token = $dataToken->accessToken;
       $token_expire = $dataToken->token->expires_at;
 
+      $newLogAccess = new UserLogAccess();
+      $newLogAccess->user_id = $user->id;
+      $newLogAccess->ip = $request->ip();
+      $newLogAccess->last_access = date('Y-m-d H:i:s');
+
+      $newLogAccess->save();
+
       return response()->json([
         "message" => "Autenticação realizada com sucesso!",
         "token" => ["value" => $token, "expires" => $token_expire],
@@ -32,6 +46,43 @@ class UserAuthController extends Controller
       return response()->json([
         "message" => "Credenciais Inválidas!",
       ], 401);
+    }
+  }
+
+  public function Logout()
+  {
+    $user = Auth::user()->token();
+    $user->revoke();
+
+    return response()->json([
+      "message" => "Logout realizado com sucesso!",
+    ], 200);
+  }
+
+  public function Recovery(UserRecoveryRequest $request)
+  {
+    $email = $request->only('email');
+
+    $generatedPass = "ARCANO" . bin2hex(openssl_random_pseudo_bytes(4));
+
+    $user = User::where('email', $email)->first();
+
+    $user->password = Hash::make($generatedPass);
+
+    try {
+      $user->save();
+      $user->new = $generatedPass;
+
+      Mail::to($user)->send(new UserRecovery($user));
+
+      return response()->json([
+        'message' => 'Recuperação de senha solicitada.'
+      ]);
+    } catch (\Throwable $th) {
+      return response()->json([
+        'message' => 'Ocorreu um erro ao solicitar a Recuperação de senha.',
+        'error' => $th
+      ], 400);
     }
   }
 

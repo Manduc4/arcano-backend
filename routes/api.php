@@ -17,10 +17,13 @@ use Illuminate\Support\Facades\Route;
 
 # USUÁRIO SEM TOKEN
 Route::post('/login', [UserAuthController::class, 'Login']);
+Route::post('/recovery', [UserAuthController::class, 'Recovery']);
 Route::post('/register', [UserAuthController::class, 'CreateUser']);
 
 # USUÁRIO COM TOKEN
 Route::middleware(['auth:api'])->group(function () {
+  Route::post('/logout', [UserAuthController::class, 'Logout']);
+
   Route::get('/users', [UserAuthController::class, 'List']);
   Route::get('/users/{id}', [UserAuthController::class, 'Individual']);
   Route::put('/users/{id}', [UserAuthController::class, 'Update']);
