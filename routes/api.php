@@ -22,11 +22,12 @@ Route::post('/register', [UserAuthController::class, 'CreateUser']);
 
 # USUÁRIO COM TOKEN
 Route::middleware(['auth:api'])->group(function () {
-  Route::post('/logout', [UserAuthController::class, 'Logout']);
+  Route::get('/logout', [UserAuthController::class, 'Logout']);
 
   Route::get('/users', [UserAuthController::class, 'List']);
   Route::get('/users/{id}', [UserAuthController::class, 'Individual']);
-  Route::put('/users/{id}', [UserAuthController::class, 'Update']);
+  Route::put('/users/{id}', [UserAuthController::class, 'UpdateUser']);
+  Route::put('me/users', [UserAuthController::class, 'UpdatePassword']);
   Route::delete('/users/{id}', [UserAuthController::class, 'Delete']);
 
   Route::post('/books', [BookController::class, 'New']);

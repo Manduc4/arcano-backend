@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateUserRequest;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Requests\UserRecoveryRequest;
 use App\Mail\UserRecovery;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
+use Throwable;
 
 class UserAuthController extends Controller
 {
@@ -106,6 +108,62 @@ class UserAuthController extends Controller
         'message' => 'Ocorreu um erro ao cadastrar o Usuário.',
         'error' => $th
       ], 401);
+    }
+  }
+
+  public function UpdateUser(UpdateUserRequest $request, $id)
+  {
+    $data = $request->all();
+
+    $update = User::find($id);
+    $update->email = $data['email'];
+    $update->name = $data['name'];
+
+    try {
+      $update->save();
+
+      return response()->json([
+        'message' => 'Usuário atualizado com Sucesso!',
+        'user' => $update
+      ]);
+    } catch (\Throwable $th) {
+      return response()->json([
+        'message' => 'Ocorreu um erro ao atualizar o Usuário.',
+        'error' => $th
+      ], 400);
+    }
+  }
+
+  public function UpdatePassword(UpdatePasswordRequest $request)
+  {
+    $auth_id = Auth::user()->id;
+    $update = User::find($auth_id);
+
+    if (!$update) {
+      return response()->json([
+        "message" => "Não encontramos informações referente ao usuário autenticado.",
+      ], 400);
+    };
+
+    // if (!Hash::check($request->password, $update->password)) {
+    //   return response()->json([
+    //     "error" => "A senha atual não confere.",
+    //   ], 400);
+    // }
+
+    $update->password = Hash::make($request['password']);
+
+    try {
+      $update->save();
+
+      return response()->json([
+        'message' => 'Senha atualizada com sucesso!',
+      ]);
+    } catch (Throwable $th) {
+      return response()->json([
+        'message' => 'Ocorreu um erro ao atualizar a Senha.',
+        'error' => $th
+      ]);
     }
   }
 

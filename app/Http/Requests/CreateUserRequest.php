@@ -36,6 +36,7 @@ class CreateUserRequest extends FormRequest
     return [
       'name.required' => 'O parâmetro :attribute é obrigatório.',
       'email.required' => 'O parâmetro :attribute é obrigatório.',
+      'email.unique:users' => 'Este email já está em uso.',
       'password' => 'O parâmetro :attribute é obrigatório.',
     ];
   }
